@@ -37,4 +37,9 @@ Use the command to run the model
 ![image](https://github.com/user-attachments/assets/15de838f-6a44-4858-99f5-1bdf42d578f6)
 
 
+Note: To run using linux os:
+
+`curl -X POST -F "file=@reviews.csv" http://localhost:5000/predict`
+
+
 
