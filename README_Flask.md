@@ -28,5 +28,13 @@ Use the command to run the model
 
  We can change the -Body to any text review that need to be classified.
 
- Output:
+ ![image](https://github.com/user-attachments/assets/2ae04eb2-81b6-4c8b-9d75-846ff459f664)
+
+
+ ### Output:
+
  
+![image](https://github.com/user-attachments/assets/15de838f-6a44-4858-99f5-1bdf42d578f6)
+
+
+
