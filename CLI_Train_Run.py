@@ -7,73 +7,98 @@ Original file is located at
     https://colab.research.google.com/drive/1C3ex8ygTbXZWHKP3eqUSuU-NuUdR7xhI
 """
 
+import argparse
 import os
+
+import pandas as pd
 import torch
+from App_dangerrousness import (BERTClassifier, TextClassificationDataset,
+                                evaluate, train)
+from sklearn.metrics import accuracy_score, classification_report
+from sklearn.model_selection import train_test_split
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
-from transformers import BertTokenizer, BertModel, AdamW, get_linear_schedule_with_warmup
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, classification_report
-import pandas as pd
+from transformers import (AdamW, BertModel, BertTokenizer,
+                          get_linear_schedule_with_warmup)
 from util import load_data
-from App_dangerrousness import BERTClassifier, TextClassificationDataset,train,evaluate
-import argparse
 
 
 # Set up CLI argument parser
 def parse_args():
-    parser = argparse.ArgumentParser(description="Train BERT model for text classification.")
-    parser.add_argument('--data_file', type=str, required=True, help="Path to the CSV file containing texts and labels.")
-    parser.add_argument('--eval_flag', type=str, required=True, help="Whether to evaluate to see the Accuracy.")
+    parser = argparse.ArgumentParser(
+        description="Train BERT model for text classification."
+    )
+    parser.add_argument(
+        "--data_file",
+        type=str,
+        required=True,
+        help="Path to the CSV file containing texts and labels.",
+    )
+    parser.add_argument(
+        "--eval_flag",
+        type=str,
+        required=True,
+        help="Whether to evaluate to see the Accuracy.",
+    )
     return parser.parse_args()
+
 
 def main():
 
-  args = parse_args()
+    args = parse_args()
 
-  #Place File path arg here!
-  data_file = args.data_file
-  texts, labels = load_data(data_file)
+    # Place File path arg here!
+    data_file = args.data_file
+    texts, labels = load_data(data_file)
 
-  # Set up parameters
-  bert_model_name = 'bert-base-uncased'
-  num_classes = 2
-  max_length = 128
-  batch_size = 16
-  num_epochs = 4
-  learning_rate = 2e-5
+    # Set up parameters
+    bert_model_name = "bert-base-uncased"
+    num_classes = 2
+    max_length = 128
+    batch_size = 16
+    num_epochs = 4
+    learning_rate = 2e-5
 
-  train_texts, val_texts, train_labels, val_labels = train_test_split(texts, labels, test_size=0.2, random_state=42)
+    train_texts, val_texts, train_labels, val_labels = train_test_split(
+        texts, labels, test_size=0.2, random_state=42
+    )
 
-  tokenizer = BertTokenizer.from_pretrained(bert_model_name)
-  train_dataset = TextClassificationDataset(train_texts, train_labels, tokenizer, max_length)
-  val_dataset = TextClassificationDataset(val_texts, val_labels, tokenizer, max_length)
-  train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-  val_dataloader = DataLoader(val_dataset, batch_size=batch_size)
+    tokenizer = BertTokenizer.from_pretrained(bert_model_name)
+    train_dataset = TextClassificationDataset(
+        train_texts, train_labels, tokenizer, max_length
+    )
+    val_dataset = TextClassificationDataset(
+        val_texts, val_labels, tokenizer, max_length
+    )
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    val_dataloader = DataLoader(val_dataset, batch_size=batch_size)
 
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = BERTClassifier(bert_model_name, num_classes, batch_size, learning_rate).to(
+        device
+    )
 
+    optimizer = AdamW(model.parameters(), lr=learning_rate)
+    total_steps = len(train_dataloader) * num_epochs
+    scheduler = get_linear_schedule_with_warmup(
+        optimizer, num_warmup_steps=0, num_training_steps=total_steps
+    )
 
-  device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-  model = BERTClassifier(bert_model_name, num_classes,batch_size,learning_rate).to(device)
+    print("Training started")
+    best_accuracy = 0
+    for epoch in range(num_epochs):
 
-  optimizer = AdamW(model.parameters(), lr=learning_rate)
-  total_steps = len(train_dataloader) * num_epochs
-  scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=0, num_training_steps=total_steps)
+        train(model, train_dataloader, optimizer, scheduler, device)
+        accuracy, report = evaluate(model, val_dataloader, device)
+        if accuracy > best_accuracy:
+            best_accuracy = accuracy
+            torch.save(model.state_dict(), "bert_classifier.pth")
+    print("Training Finished")
 
-  print('Training started')
-  best_accuracy =0
-  for epoch in range(num_epochs):
-    
-    train(model, train_dataloader, optimizer, scheduler, device)
-    accuracy, report = evaluate(model, val_dataloader, device)
-    if accuracy > best_accuracy:
-      best_accuracy=accuracy
-      torch.save(model.state_dict(), "bert_classifier.pth")  
-  print('Training Finished')
+    if args.eval_flag == "Y":
+        eval_accuracy = evaluate(model, val_dataloader, device)
+        print(f"The Evaluation Accuracy: {eval_accuracy}")
 
-  if args.eval_flag == 'Y':
-     eval_accuracy = evaluate(model, val_dataloader,device)
-     print(f"The Evaluation Accuracy: {eval_accuracy}")
 
 if __name__ == "__main__":
     main()

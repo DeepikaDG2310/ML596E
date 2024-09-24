@@ -1,8 +1,10 @@
 import torch
+from flask import Flask, request, jsonify
+from transformers import BertTokenizer
 from App_dangerrousness import BERTClassifier
 from config import *  # Ensure this contains your model parameters
-from flask import Flask, jsonify, request
-from transformers import BertTokenizer
+import pandas as pd
+import io
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -31,16 +33,32 @@ model = load_model(
 
 @app.route("/predict", methods=["POST"])
 def predict():
-    data = request.get_json()
-    text = data.get("text")
+    if "file" not in request.files:
+        return jsonify({"error": "No file provided"}), 400
 
-    if text is None:
-        return jsonify({"error": "No text provided"}), 400
+    file = request.files["file"]
 
-    pred_class = predict_text_class(text)
-    predicted_class = "Safe" if pred_class == 1 else "not-safe"
+    if not file:
+        return jsonify({"error": "Invalid file"}), 400
 
-    return jsonify({"text": text, "predicted_class": predicted_class})
+    # Read the file into a pandas DataFrame
+    try:
+        df = pd.read_csv(io.StringIO(file.read().decode("utf-8")))
+    except Exception as e:
+        return jsonify({"error": "Failed to read CSV file", "message": str(e)}), 400
+
+    if "review" not in df.columns:
+        return jsonify({"error": 'CSV must contain a "review" column'}), 400
+
+    # Process each review in the CSV
+    predictions = []
+    for review in df["review"]:
+        pred_class = predict_text_class(review)
+        predicted_class = "Safe" if pred_class == 1 else "not-safe"
+        predictions.append({"review": review, "predicted_class": predicted_class})
+
+    # Return the predictions
+    return jsonify(predictions)
 
 
 def predict_text_class(text):

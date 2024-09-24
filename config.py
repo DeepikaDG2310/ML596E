@@ -1,19 +1,20 @@
-
+import argparse
 import os
+
+import pandas as pd
 import torch
+from App_dangerrousness import (BERTClassifier, TextClassificationDataset,
+                                evaluate, predict_sentiment, train)
+from sklearn.metrics import accuracy_score, classification_report
+from sklearn.model_selection import train_test_split
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
-from transformers import BertTokenizer, BertModel, AdamW, get_linear_schedule_with_warmup
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, classification_report
-import pandas as pd
+from transformers import (AdamW, BertModel, BertTokenizer,
+                          get_linear_schedule_with_warmup)
 from util import load_data, predict_batch
-from App_dangerrousness import BERTClassifier, TextClassificationDataset,train,evaluate, predict_sentiment
-import argparse
-
 
 # Set up parameters
-bert_model_name = 'bert-base-uncased'
+bert_model_name = "bert-base-uncased"
 num_classes = 2
 max_length = 128
 batch_size = 16
