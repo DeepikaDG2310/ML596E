@@ -7,7 +7,7 @@ Once you have prepared the dataset and set up the environment, you can train the
 
 Save and run the model using  CLI with input file 
 
-`python Review_class_prediction.py --data_file "input_file_path" --output_file "output_path_file" `
+`python Review_class_prediction_CLI.py --data_file "input_file_path" --output_file "output_path_file" `
 
 Arguments:
 
