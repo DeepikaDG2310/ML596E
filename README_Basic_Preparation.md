@@ -40,7 +40,7 @@ Save and Run the `App_dangerrousness.py` to prepare the model and fine-tune the 
 
 Save and Run the `CLI_Train_Run.py`. This will run the code to train and fine - tuned the pre trained BERT model. Save the model
 
-`python CLI_Train_Run.py --data_file  "C:\\ML596E\\App_review_class.csv" --eval_flag "Y"'
+`python CLI_Train_Run.py --data_file  "App_review_Class.csv" --eval_flag "Y"'
 
 #### Evaluation using Validate Dataset
 
