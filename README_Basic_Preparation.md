@@ -50,4 +50,5 @@ Save and Run the `CLI_Train_Run.py`. This will run the code to train and fine - 
 ###This will prepare the model and save it. So that it can be loaded into different module to classify the Review
 
 
-
+## Saved Model is placed in Google Drive due to its large size. Please use the "bert_classifier.pth" or train the model usinig App_review_Class.csv file as given in the instruction
+https://drive.google.com/file/d/1OJrquXNAKok1BaiWYP8MqVdvvB9cHNQP/view?usp=sharing
